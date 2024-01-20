@@ -1,6 +1,7 @@
 using ecommerce.Models;
 using ecommerce.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace ecommerce.Controllers
 {
@@ -15,10 +16,17 @@ namespace ecommerce.Controllers
             this.context = context;
         }
 
+        [HttpGet("subjects")]
+        public IActionResult GetSubjects()
+        {
+            var listSubjects = context.Subjects.ToList();
+            return Ok(listSubjects);
+        }
+
         [HttpGet]
         public IActionResult GetContacts()
         {
-            var contacts = context.Contacts.ToList();
+            var contacts = context.Contacts.Include(c => c.Subject).ToList();
 
             return Ok(contacts);
         }
@@ -26,7 +34,7 @@ namespace ecommerce.Controllers
         [HttpGet("{id}")]
         public IActionResult GetContactById(int id)
         {
-            var contact = context.Contacts.Find(id);
+            var contact = context.Contacts.Include(c => c.Subject).FirstOrDefault(c => c.Id == id);
 
             if (contact == null)
             {
@@ -39,13 +47,20 @@ namespace ecommerce.Controllers
         [HttpPost]
         public IActionResult CreateContact(ContactDto newContact)
         {
+            var subject = context.Subjects.Find(newContact.SubjectId);
+            if(subject == null)
+            {
+                ModelState.AddModelError("Subject", "Please select a valid subject");
+                return BadRequest(ModelState);
+            }
+
             Contact contact = new Contact()
             {
                 FirstName = newContact.FirstName,
                 LastName = newContact.LastName,
                 Email = newContact.Email,
                 Phone = newContact.Phone ?? "",
-                Subject = newContact.Subject,
+                Subject = subject,
                 Message = newContact.Message,
                 CreatedAt = DateTime.Now
             };
@@ -66,11 +81,18 @@ namespace ecommerce.Controllers
                 return NotFound();
             }
 
+            var subject = context.Subjects.Find(updatedContact.SubjectId);
+            if(subject == null)
+            {
+                ModelState.AddModelError("Subject", "Please select a valid subject");
+                return BadRequest(ModelState);
+            }
+
             contact.FirstName = updatedContact.FirstName;
             contact.LastName = updatedContact.LastName;
             contact.Email = updatedContact.Email;
             contact.Phone = updatedContact.Phone ?? "";
-            contact.Subject = updatedContact.Subject;
+            contact.Subject = subject;
             contact.Message = updatedContact.Message;
 
             context.SaveChanges();
@@ -97,7 +119,7 @@ namespace ecommerce.Controllers
             // 1 Query
             try
             {
-            var contact = new Contact { Id = id };
+            var contact = new Contact { Id = id, Subject = new Subject() };
             context.Contacts.Remove(contact);
             context.SaveChanges();
             }

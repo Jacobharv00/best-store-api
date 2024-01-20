@@ -17,8 +17,7 @@ namespace ecommerce.Models
         [MaxLength(100)]
         public string? Phone { get; set; }
 
-        [Required, MaxLength(100)]
-        public string Subject { get; set; } = string.Empty;
+        public int SubjectId { get; set; }
 
         [Required, MinLength(20), MaxLength(4000)]
         public string Message { get; set; } = string.Empty;

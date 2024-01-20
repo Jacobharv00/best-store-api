@@ -17,9 +17,7 @@ namespace ecommerce.Models
 
         [MaxLength(100)]
         public string Phone { get; set; } = string.Empty;
-
-        [MaxLength(100)]
-        public string Subject { get; set; } = string.Empty;
+        public required Subject Subject { get; set; }
         public string Message { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.Now;
     }
