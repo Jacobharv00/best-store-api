@@ -24,11 +24,35 @@ namespace ecommerce.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetContacts()
+        public IActionResult GetContacts(int? page)
         {
-            var contacts = context.Contacts.Include(c => c.Subject).ToList();
+            if (page == null || page < 1)
+            {
+                page = 1;
+            }
 
-            return Ok(contacts);
+            int pageSize = 5;
+            int totalPages = 0;
+            decimal count = context.Contacts.Count();
+            totalPages = (int)Math.Ceiling(count / pageSize);
+
+            var contacts = context.Contacts
+                .Include(c => c.Subject)
+                .OrderByDescending(c => c.Id)
+                .Skip((int)(page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            // Anoymous Type
+            var response = new
+            {
+                Contacts = contacts,
+                TotalPages = totalPages,
+                PageSize = pageSize,
+                Page = page
+            };
+
+            return Ok(response);
         }
 
         [HttpGet("{id}")]
@@ -48,7 +72,7 @@ namespace ecommerce.Controllers
         public IActionResult CreateContact(ContactDto newContact)
         {
             var subject = context.Subjects.Find(newContact.SubjectId);
-            if(subject == null)
+            if (subject == null)
             {
                 ModelState.AddModelError("Subject", "Please select a valid subject");
                 return BadRequest(ModelState);
@@ -82,7 +106,7 @@ namespace ecommerce.Controllers
             }
 
             var subject = context.Subjects.Find(updatedContact.SubjectId);
-            if(subject == null)
+            if (subject == null)
             {
                 ModelState.AddModelError("Subject", "Please select a valid subject");
                 return BadRequest(ModelState);
@@ -119,9 +143,9 @@ namespace ecommerce.Controllers
             // 1 Query
             try
             {
-            var contact = new Contact { Id = id, Subject = new Subject() };
-            context.Contacts.Remove(contact);
-            context.SaveChanges();
+                var contact = new Contact { Id = id, Subject = new Subject() };
+                context.Contacts.Remove(contact);
+                context.SaveChanges();
             }
             catch (Exception)
             {
