@@ -43,6 +43,7 @@ namespace ecommerce.Controllers
             int? page
         )
         {
+            // The guy teaching this should refactor to not use tons of if & else if statements
             IQueryable<Product> query = context.Products;
 
             if (search != null)
