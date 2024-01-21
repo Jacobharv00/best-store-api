@@ -74,3 +74,4 @@
 /Users/jacobharvey/udemy/ecommerce-dotnet/ecommerce/obj/Debug/net7.0/ecommerce.pdb
 /Users/jacobharvey/udemy/ecommerce-dotnet/ecommerce/obj/Debug/net7.0/ecommerce.genruntimeconfig.cache
 /Users/jacobharvey/udemy/ecommerce-dotnet/ecommerce/obj/Debug/net7.0/ref/ecommerce.dll
+/Users/jacobharvey/udemy/ecommerce-dotnet/ecommerce/bin/Debug/net7.0/ecommerce.staticwebassets.runtime.json
