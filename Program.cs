@@ -1,13 +1,28 @@
-using ecommerce.Models;
 using ecommerce.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition(
+        "oauth2",
+        new OpenApiSecurityScheme
+        {
+            Description = "Please Enter Token",
+            In = ParameterLocation.Header,
+            Name = "Authorization",
+            Type = SecuritySchemeType.ApiKey
+        }
+    );
+
+    options.OperationFilter<SecurityRequirementsOperationFilter>();
+});
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
@@ -16,30 +31,6 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 });
 
 var app = builder.Build();
-
-app.MapGet(
-    "/",
-    (ApplicationDbContext context) =>
-    {
-        var product = new Product()
-        {
-            Name = "IPhone 15 Pro Max",
-            Brand = "Apple",
-            Category = "Phones",
-            Price = 1200,
-            Description = "Cool new phone",
-            ImageFileName = "www.example-png.com",
-            CreatedAt = DateTime.Now
-        };
-
-        context.Products.Add(product);
-        context.SaveChanges();
-
-        var products = context.Products.ToList();
-
-        return products;
-    }
-);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
