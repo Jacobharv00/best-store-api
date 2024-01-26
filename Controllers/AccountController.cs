@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using ecommerce.Models;
 using ecommerce.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -21,16 +22,6 @@ namespace ecommerce.Controllers
             this.configuration = configuration;
             this.context = context;
         }
-
-        // [HttpGet("TestToken")]
-        // public IActionResult TestToken()
-        // {
-        //     User user = new User() { Id = 2, Role = "admin" };
-        //     string jwt = CreateJWToken(user);
-        //     var response = new { JwtToken = jwt };
-
-        //     return Ok(response);
-        // }
 
         [HttpPost("Register")]
         public IActionResult Register(UserDto user)
@@ -118,6 +109,51 @@ namespace ecommerce.Controllers
             return Ok(response);
         }
 
+        // ========== Get Claim Information ==========
+        // [Authorize]
+        // [HttpGet("GetTokenClaims")]
+        // public IActionResult GetTokenClaims()
+        // {
+        //     var identity = User.Identity as ClaimsIdentity;
+
+        //     if (identity != null)
+        //     {
+        //         Dictionary<string, string> claims = new Dictionary<string, string>();
+
+        //         foreach (Claim claim in identity.Claims)
+        //         {
+        //             claims.Add(claim.Type, claim.Value);
+        //         }
+
+        //         return Ok(claims);
+        //     }
+
+        //     return Ok();
+        // }
+
+        // ========== Testing Authorized Routes ==========
+        // [Authorize]
+        // [HttpGet("AuthorizedUser")]
+        // public IActionResult AuthorizedUser()
+        // {
+        //     return Ok("You are a user and are authorized!");
+        // }
+
+        // [Authorize(Roles = "admin")]
+        // [HttpGet("AuthorizeAdminUser")]
+        // public IActionResult AuthorizeAdminUser()
+        // {
+        //     return Ok("You are a admin and are authorized");
+        // }
+
+        // [Authorize(Roles = "admin, seller")]
+        // [HttpGet("AuthorizeAdminAndSeller")]
+        // public IActionResult AuthorizeAdminAndSeller()
+        // {
+        //     return Ok("You are either a admin or a seller and are authorized");
+        // }
+
+        // ========== Helpers ==========
         private string CreateJWToken(User user)
         {
             List<Claim> claims = new List<Claim>()
