@@ -1,5 +1,6 @@
 using ecommerce.Models;
 using ecommerce.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ecommerce.Controllers
@@ -183,6 +184,7 @@ namespace ecommerce.Controllers
             return Ok(product);
         }
 
+        [Authorize(Roles = "admin")]
         [HttpPost]
         public IActionResult CreateProduct([FromForm] ProductDto newProduct)
         {
@@ -227,6 +229,7 @@ namespace ecommerce.Controllers
             return Ok(product);
         }
 
+        [Authorize(Roles = "admin")]
         [HttpPut("{id}")]
         public IActionResult UpdateProduct(int id, [FromForm] ProductDto productDto)
         {
@@ -271,6 +274,7 @@ namespace ecommerce.Controllers
             return Ok(product);
         }
 
+        [Authorize(Roles = "admin")]
         [HttpDelete("{id}")]
         public IActionResult DeleteProduct(int id)
         {

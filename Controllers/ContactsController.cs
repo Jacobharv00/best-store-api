@@ -1,5 +1,6 @@
 using ecommerce.Models;
 using ecommerce.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,6 +24,7 @@ namespace ecommerce.Controllers
             return Ok(listSubjects);
         }
 
+        [Authorize(Roles = "admin")]
         [HttpGet]
         public IActionResult GetContacts(int? page)
         {
@@ -55,6 +57,7 @@ namespace ecommerce.Controllers
             return Ok(response);
         }
 
+        [Authorize(Roles = "admin")]
         [HttpGet("{id}")]
         public IActionResult GetContactById(int id)
         {
@@ -95,35 +98,36 @@ namespace ecommerce.Controllers
             return Ok(contact);
         }
 
-        [HttpPut("{id}")]
-        public IActionResult UpdateContact(int id, ContactDto updatedContact)
-        {
-            var contact = context.Contacts.Find(id);
+        // [HttpPut("{id}")]
+        // public IActionResult UpdateContact(int id, ContactDto updatedContact)
+        // {
+        //     var contact = context.Contacts.Find(id);
 
-            if (contact == null)
-            {
-                return NotFound();
-            }
+        //     if (contact == null)
+        //     {
+        //         return NotFound();
+        //     }
 
-            var subject = context.Subjects.Find(updatedContact.SubjectId);
-            if (subject == null)
-            {
-                ModelState.AddModelError("Subject", "Please select a valid subject");
-                return BadRequest(ModelState);
-            }
+        //     var subject = context.Subjects.Find(updatedContact.SubjectId);
+        //     if (subject == null)
+        //     {
+        //         ModelState.AddModelError("Subject", "Please select a valid subject");
+        //         return BadRequest(ModelState);
+        //     }
 
-            contact.FirstName = updatedContact.FirstName;
-            contact.LastName = updatedContact.LastName;
-            contact.Email = updatedContact.Email;
-            contact.Phone = updatedContact.Phone ?? "";
-            contact.Subject = subject;
-            contact.Message = updatedContact.Message;
+        //     contact.FirstName = updatedContact.FirstName;
+        //     contact.LastName = updatedContact.LastName;
+        //     contact.Email = updatedContact.Email;
+        //     contact.Phone = updatedContact.Phone ?? "";
+        //     contact.Subject = subject;
+        //     contact.Message = updatedContact.Message;
 
-            context.SaveChanges();
+        //     context.SaveChanges();
 
-            return Ok(contact);
-        }
+        //     return Ok(contact);
+        // }
 
+        [Authorize(Roles = "admin")]
         [HttpDelete("{id}")]
         public IActionResult DeleteContact(int id)
         {
