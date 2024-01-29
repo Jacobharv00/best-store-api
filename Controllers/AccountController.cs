@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -244,6 +245,28 @@ namespace ecommerce.Controllers
             };
 
             return Ok(userProfileDto);
+        }
+
+        [Authorize]
+        [HttpPut("UpdatePassword")]
+        public IActionResult UpdatePassword(
+            [Required, MinLength(8), MaxLength(100)] string newPassword
+        )
+        {
+            int id = GetUserId();
+            var user = context.Users.Find(id);
+            if (user is null)
+            {
+                return Unauthorized();
+            }
+
+            var passwordHasher = new PasswordHasher<User>();
+            string encryptedPassword = passwordHasher.HashPassword(new User(), newPassword);
+
+            user.Pasword = encryptedPassword;
+            context.SaveChanges();
+
+            return Ok();
         }
 
         // ========== Get Claim Information ==========
