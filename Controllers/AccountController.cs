@@ -188,33 +188,48 @@ namespace ecommerce.Controllers
         [HttpGet("Profile")]
         public IActionResult GetProfile()
         {
-            var identity = User.Identity as ClaimsIdentity;
-            if (identity is null)
-            {
-                return Unauthorized();
-            }
-
-            var claim = identity.Claims.FirstOrDefault(c => c.Type.ToLower() == "id");
-            if (claim is null)
-            {
-                return Unauthorized();
-            }
-
-            int id;
-            try
-            {
-                id = int.Parse(claim.Value);
-            }
-            catch (Exception)
-            {
-                return Unauthorized();
-            }
+            int id = GetUserId();
 
             var user = context.Users.Find(id);
             if (user is null)
             {
                 return Unauthorized();
             }
+
+            var userProfileDto = new UserProfileDto()
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email,
+                Phone = user.Phone,
+                Address = user.Address,
+                Role = user.Role,
+                CreatedAt = user.CreatedAt
+            };
+
+            return Ok(userProfileDto);
+        }
+
+        [Authorize]
+        [HttpPut("UpdateProfile")]
+        public IActionResult UpdateProfile(UserProfileUpdateDto userProfileUpdateDto)
+        {
+            int id = GetUserId();
+
+            var user = context.Users.Find(id);
+            if (user is null)
+            {
+                return Unauthorized();
+            }
+
+            user.FirstName = userProfileUpdateDto.FirstName;
+            user.LastName = userProfileUpdateDto.LastName;
+            user.Email = userProfileUpdateDto.Email;
+            user.Phone = userProfileUpdateDto.Phone ?? "";
+            user.Address = userProfileUpdateDto.Address;
+
+            context.SaveChanges();
 
             var userProfileDto = new UserProfileDto()
             {
@@ -301,6 +316,33 @@ namespace ecommerce.Controllers
             var jwt = new JwtSecurityTokenHandler().WriteToken(token);
 
             return jwt;
+        }
+
+        private int GetUserId()
+        {
+            var identity = User.Identity as ClaimsIdentity;
+            if (identity is null)
+            {
+                return 0;
+            }
+
+            var claim = identity.Claims.FirstOrDefault(c => c.Type.ToLower() == "id");
+            if (claim is null)
+            {
+                return 0;
+            }
+
+            int id;
+            try
+            {
+                id = int.Parse(claim.Value);
+            }
+            catch (Exception)
+            {
+                return 0;
+            }
+
+            return id;
         }
     }
 }
