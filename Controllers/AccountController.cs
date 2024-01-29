@@ -109,6 +109,128 @@ namespace ecommerce.Controllers
             return Ok(response);
         }
 
+        [HttpPost("ForgotPassword")]
+        public IActionResult ForgotPassword(string email)
+        {
+            var user = context.Users.FirstOrDefault(u => u.Email == email);
+            if (user is null)
+            {
+                return NotFound();
+            }
+
+            var oldPasswordReset = context.PasswordResets.FirstOrDefault(r => r.Email == email);
+            if (oldPasswordReset is not null)
+            {
+                context.Remove(oldPasswordReset);
+            }
+
+            string token = Guid.NewGuid().ToString() + "-" + Guid.NewGuid().ToString();
+
+            var passwordReset = new PasswordReset()
+            {
+                Email = email,
+                Token = token,
+                CreatedAt = DateTime.Now
+            };
+
+            context.PasswordResets.Add(passwordReset);
+            context.SaveChanges();
+
+            // ========== Start of sending a user the email flow ==========
+            // string emailSubject = "Password Reset";
+            // string username = user.FirstName + " " + user.LastName;
+            // string emailMessage =
+            //     "Dear "
+            //     + username
+            //     + "\n"
+            //     + "We received your password reset request.\n"
+            //     + "Please copy the following token and paste it in the Password Reset Form:\n"
+            //     + token
+            //     + "\n\n"
+            //     + "Best Regards\n";
+
+            // Send Email but I didnot signup for 3rd party service or implement
+            //  the EmailSender class & method
+            // ========== What the code would be to send user token ==========
+            // emailSender.SendEmail(emailSubject, email, username, emailMessage).Wait();
+
+            return Ok();
+        }
+
+        [HttpPost("ResetPassword")]
+        public IActionResult ResetPassword(string token, string password)
+        {
+            var pwdReset = context.PasswordResets.FirstOrDefault(r => r.Token == token);
+            if (pwdReset is null)
+            {
+                ModelState.AddModelError("Token", "Wrong Information");
+                return BadRequest(ModelState);
+            }
+
+            var user = context.Users.FirstOrDefault(u => u.Email == pwdReset.Email);
+            if (user is null)
+            {
+                ModelState.AddModelError("Token", "Wrong Information");
+                return BadRequest(ModelState);
+            }
+
+            var passwordHasher = new PasswordHasher<User>();
+            string encryptedPassword = passwordHasher.HashPassword(new User(), password);
+
+            user.Pasword = encryptedPassword;
+            context.PasswordResets.Remove(pwdReset);
+            context.SaveChanges();
+
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpGet("Profile")]
+        public IActionResult GetProfile()
+        {
+            var identity = User.Identity as ClaimsIdentity;
+            if (identity is null)
+            {
+                return Unauthorized();
+            }
+
+            var claim = identity.Claims.FirstOrDefault(c => c.Type.ToLower() == "id");
+            if (claim is null)
+            {
+                return Unauthorized();
+            }
+
+            int id;
+            try
+            {
+                id = int.Parse(claim.Value);
+            }
+            catch (Exception)
+            {
+                return Unauthorized();
+            }
+
+            var user = context.Users.Find(id);
+            if (user is null)
+            {
+                return Unauthorized();
+            }
+
+            var userProfileDto = new UserProfileDto()
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email,
+                Phone = user.Phone,
+                Address = user.Address,
+                Role = user.Role,
+                CreatedAt = user.CreatedAt
+            };
+
+            return Ok(userProfileDto);
+        }
+
         // ========== Get Claim Information ==========
         // [Authorize]
         // [HttpGet("GetTokenClaims")]
