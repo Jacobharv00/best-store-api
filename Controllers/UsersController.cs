@@ -66,5 +66,30 @@ namespace ecommerce.Controllers
 
             return Ok(response);
         }
+
+        [HttpGet("{id}")]
+        public IActionResult GetUser(int id)
+        {
+            var user = context.Users.Find(id);
+
+            if (user is null)
+            {
+                return NotFound();
+            }
+
+            var userProfileDto = new UserProfileDto()
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email,
+                Phone = user.Phone,
+                Address = user.Address,
+                Role = user.Role,
+                CreatedAt = user.CreatedAt
+            };
+
+            return Ok(userProfileDto);
+        }
     }
 }

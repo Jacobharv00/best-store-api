@@ -189,7 +189,7 @@ namespace ecommerce.Controllers
         [HttpGet("Profile")]
         public IActionResult GetProfile()
         {
-            int id = GetUserId();
+            int id = JwtReader.GetUserId(User);
 
             var user = context.Users.Find(id);
             if (user is null)
@@ -216,7 +216,7 @@ namespace ecommerce.Controllers
         [HttpPut("UpdateProfile")]
         public IActionResult UpdateProfile(UserProfileUpdateDto userProfileUpdateDto)
         {
-            int id = GetUserId();
+            int id = JwtReader.GetUserId(User);
 
             var user = context.Users.Find(id);
             if (user is null)
@@ -253,7 +253,7 @@ namespace ecommerce.Controllers
             [Required, MinLength(8), MaxLength(100)] string newPassword
         )
         {
-            int id = GetUserId();
+            int id = JwtReader.GetUserId(User);
             var user = context.Users.Find(id);
             if (user is null)
             {
@@ -339,33 +339,6 @@ namespace ecommerce.Controllers
             var jwt = new JwtSecurityTokenHandler().WriteToken(token);
 
             return jwt;
-        }
-
-        private int GetUserId()
-        {
-            var identity = User.Identity as ClaimsIdentity;
-            if (identity is null)
-            {
-                return 0;
-            }
-
-            var claim = identity.Claims.FirstOrDefault(c => c.Type.ToLower() == "id");
-            if (claim is null)
-            {
-                return 0;
-            }
-
-            int id;
-            try
-            {
-                id = int.Parse(claim.Value);
-            }
-            catch (Exception)
-            {
-                return 0;
-            }
-
-            return id;
         }
     }
 }
