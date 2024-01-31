@@ -2,6 +2,7 @@ using ecommerce.Models;
 using ecommerce.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace ecommerce.Controllers
 {
@@ -74,6 +75,115 @@ namespace ecommerce.Controllers
 
             context.Orders.Add(order);
             context.SaveChanges();
+
+            // Get Rid of object cycle
+            foreach (var item in order.OrderItems)
+            {
+                item.Order = null;
+            }
+
+            // Hide user password
+            order.User.Pasword = "";
+
+            return Ok(order);
+        }
+
+        [Authorize]
+        [HttpGet]
+        public IActionResult GetOrders(int? page)
+        {
+            int userId = JwtReader.GetUserId(User);
+            // string role = JwtReader.GetUserRole(User);
+            string role = context.Users.Find(userId)?.Role ?? "";
+
+            IQueryable<Order> query = context.Orders
+                .Include(o => o.User)
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.Product);
+
+            if (role != "admin")
+            {
+                query = query.Where(o => o.UserId == userId);
+            }
+
+            query = query.OrderByDescending(o => o.Id);
+
+            // Paganation
+            if (page is null || page < 1)
+            {
+                page = 1;
+            }
+
+            int pageSize = 5;
+            int totalPages = 0;
+
+            decimal count = query.Count();
+            totalPages = (int)Math.Ceiling(count / pageSize);
+
+            query = query.Skip((int)(page - 1) * pageSize).Take(pageSize);
+
+            // Read Orders
+            var orders = query.ToList();
+
+            foreach (var order in orders)
+            {
+                // Fix object cycle
+                foreach (var item in order.OrderItems)
+                {
+                    item.Order = null;
+                }
+                order.User.Pasword = "";
+            }
+
+            var response = new
+            {
+                Orders = orders,
+                TotalPages = totalPages,
+                PageSize = pageSize,
+                Page = page
+            };
+
+            return Ok(response);
+        }
+
+        [Authorize]
+        [HttpGet("{id}")]
+        public IActionResult GetOrder(int id)
+        {
+            int userId = JwtReader.GetUserId(User);
+            string role = context.Users.Find(userId)?.Role ?? "";
+
+            Order? order = null;
+
+            if (role == "admin")
+            {
+                order = context.Orders
+                    .Include(o => o.User)
+                    .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Product)
+                    .FirstOrDefault(o => o.Id == id);
+            }
+            else
+            {
+                order = context.Orders
+                    .Include(o => o.User)
+                    .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Product)
+                    .FirstOrDefault(o => o.Id == id && o.UserId == userId);
+            }
+
+            if (order is null)
+            {
+                return NotFound();
+            }
+
+            // Get rid of object cycle
+            foreach (var item in order.OrderItems)
+            {
+                item.Order = null;
+            }
+
+            order.User.Pasword = "";
 
             return Ok(order);
         }
