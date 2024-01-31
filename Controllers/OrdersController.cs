@@ -187,5 +187,66 @@ namespace ecommerce.Controllers
 
             return Ok(order);
         }
+
+        [Authorize(Roles = "admin")]
+        [HttpPut("{id}")]
+        public IActionResult UpdateOrder(int id, string? paymentStatus, string? orderStatus)
+        {
+            if (paymentStatus is null && orderStatus is null)
+            {
+                ModelState.AddModelError("Update Order", "There is nothing to update");
+                return BadRequest(ModelState);
+            }
+
+            if (paymentStatus != null && !OrderHelper.PaymentStatuses.Contains(paymentStatus))
+            {
+                ModelState.AddModelError("Payment Status", "The Payment Status is not valid");
+                return BadRequest(ModelState);
+            }
+
+            if (orderStatus != null && !OrderHelper.OrderStatuses.Contains(orderStatus))
+            {
+                ModelState.AddModelError("Order Status", "The Order Status is not valid");
+                return BadRequest(ModelState);
+            }
+
+            var order = context.Orders.Find(id);
+
+            if (order is null)
+            {
+                return NotFound();
+            }
+
+            if (paymentStatus is not null)
+            {
+                order.PaymentStatus = paymentStatus;
+            }
+
+            if (orderStatus is not null)
+            {
+                order.OrderStatus = orderStatus;
+            }
+
+            context.SaveChanges();
+
+            return Ok(order);
+        }
+
+        [Authorize(Roles = "admin")]
+        [HttpDelete("{id}")]
+        public IActionResult DeleteOrder(int id)
+        {
+            var order = context.Orders.Find(id);
+
+            if (order is null)
+            {
+                return NotFound();
+            }
+
+            context.Orders.Remove(order);
+            context.SaveChanges();
+
+            return Ok();
+        }
     }
 }
